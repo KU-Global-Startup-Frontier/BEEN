@@ -163,7 +163,7 @@ export function ActivityCard({
         {/* Rating Stars */}
         <div className="space-y-4">
           <p className="text-sm text-gray-500 text-center">
-            이 활동에 대한 관심도를 평가해주세요
+            이 활동을 얼마나 해봤는지 평가해 주세요
           </p>
 
           <div className="flex justify-center gap-2">
