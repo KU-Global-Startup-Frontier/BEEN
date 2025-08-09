@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, use } from "react"
+import { useState, useRef, use, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
@@ -13,13 +13,18 @@ import {
   Sparkles,
   Target,
   TrendingUp,
-  Award
+  Award,
+  Lock,
+  User
 } from "lucide-react"
 import Link from "next/link"
 import html2canvas from "html2canvas"
 import { RadarChart } from "../components/RadarChart"
 import { StrengthCard } from "../components/StrengthCard"
 import { ShareDialog } from "../components/ShareDialog"
+import { GoogleAuthButton } from "@/components/GoogleAuthButton"
+import { createClient } from "@/lib/supabase/client"
+import { User as SupabaseUser } from "@supabase/supabase-js"
 
 // 샘플 분석 결과 데이터
 const sampleResult = {
@@ -67,7 +72,27 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Check for logged in user
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [])
 
   const handleDownload = async () => {
     if (!resultRef.current || isDownloading) return
@@ -243,6 +268,40 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               ))}
             </ul>
           </motion.div>
+
+          {/* Save Results CTA - Only show if not logged in */}
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 }}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-8 text-white"
+            >
+              <div className="text-center">
+                <Lock className="w-12 h-12 mx-auto mb-4 opacity-80" />
+                <h3 className="text-2xl font-bold mb-2">
+                  이 정보를 저장하고 더 많은 기능을 이용하세요!
+                </h3>
+                <p className="text-white/90 mb-6">
+                  Google 계정으로 가입하면 평가 기록을 저장하고<br />
+                  더 자세한 분석 결과를 받아볼 수 있어요.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <GoogleAuthButton 
+                    text="Google로 무료 가입하기"
+                    size="lg"
+                    className="bg-white text-gray-900 hover:bg-gray-100"
+                    redirectTo={`/results/${id}`}
+                  />
+                  <div className="text-sm text-white/70">
+                    ✓ 평가 기록 저장<br />
+                    ✓ 상세 분석 리포트<br />
+                    ✓ 맞춤 추천 활동
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Footer */}
           <div className="text-center pt-4 border-t border-gray-200">

@@ -30,6 +30,38 @@ export default function EvaluatePage() {
   const [activities, setActivities] = useState<any[]>([])
   const [isFetchingActivities, setIsFetchingActivities] = useState(true)
   const [isSaving, setIsSaving] = useState(false) // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [hasCompletedAll, setHasCompletedAll] = useState(false)
+
+  // Function to fetch new random questions
+  const fetchNewQuestions = useCallback(async (excludeRated = false) => {
+    setIsFetchingActivities(true)
+    try {
+      const queryParams = new URLSearchParams({
+        limit: '100',
+        ...(sessionId && { sessionId }),
+        excludeRated: excludeRated.toString()
+      })
+      
+      const response = await fetch(`/api/activities?${queryParams}`)
+      const data = await response.json()
+
+      if (data.activities && data.activities.length > 0) {
+        setActivities(data.activities)
+        setCurrentIndex(0)
+        setHasCompletedAll(false)
+        return true
+      } else {
+        // No more questions available
+        setHasCompletedAll(true)
+        return false
+      }
+    } catch (error) {
+      console.error('Failed to fetch new questions:', error)
+      return false
+    } finally {
+      setIsFetchingActivities(false)
+    }
+  }, [sessionId])
 
   // Initialize session and fetch activities
   useEffect(() => {
@@ -38,9 +70,15 @@ export default function EvaluatePage() {
         initSession()
       }
 
-      // Fetch activities from API
+      // Fetch activities from API with random ordering
       try {
-        const response = await fetch('/api/activities')
+        const queryParams = new URLSearchParams({
+          limit: '100',
+          ...(sessionId && { sessionId }),
+          excludeRated: 'false' // Keep showing all questions but track which are rated
+        })
+        
+        const response = await fetch(`/api/activities?${queryParams}`)
         const data = await response.json()
 
         if (data.activities && data.activities.length > 0) {
@@ -195,8 +233,16 @@ export default function EvaluatePage() {
   const handleNext = useCallback(() => {
     if (currentIndex < activities.length - 1) {
       setCurrentIndex(currentIndex + 1)
+    } else {
+      // All questions completed, check if we should show completion message
+      const allRated = activities.every(activity => 
+        ratings.has(activity.id) || activityStatuses.has(activity.id)
+      )
+      if (allRated) {
+        setHasCompletedAll(true)
+      }
     }
-  }, [currentIndex, activities.length])
+  }, [currentIndex, activities, ratings, activityStatuses])
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
@@ -298,7 +344,39 @@ export default function EvaluatePage() {
       <main className="container mx-auto px-4 pb-20">
         <div className="max-w-lg mx-auto touch-none">
           <AnimatePresence mode="wait">
-            {currentActivity && (
+            {hasCompletedAll ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center p-8 bg-white rounded-lg shadow-lg"
+              >
+                <Sparkles className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-4">모든 질문을 평가하셨네요! 🎉</h2>
+                <p className="text-gray-600 mb-6">
+                  현재 {ratedCount}개의 활동을 평가하셨습니다.
+                </p>
+                <div className="space-y-3">
+                  <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={() => fetchNewQuestions(false)}
+                  >
+                    새로운 질문 받기 (랜덤)
+                  </Button>
+                  {canAnalyze() && (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleAnalyze}
+                    >
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      분석 결과 보기
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            ) : currentActivity ? (
               <ActivityCard
                 key={currentActivity.id}
                 activity={currentActivity}
@@ -311,7 +389,7 @@ export default function EvaluatePage() {
                 index={currentIndex}
                 total={activities.length}
               />
-            )}
+            ) : null}
           </AnimatePresence>
 
           {/* Navigation hints */}
