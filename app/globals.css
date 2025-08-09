@@ -24,3 +24,40 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Global text breaking rules for better mobile experience */
+* {
+  /* Korean text word breaking */
+  word-break: keep-all;
+  /* Wrap long words */
+  overflow-wrap: break-word;
+  /* Better text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure proper text wrapping in paragraphs and headings */
+p, h1, h2, h3, h4, h5, h6, span, div {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Mobile-first responsive typography */
+@media (max-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+  
+  /* Ensure minimum touch target size */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (min-width: 641px) {
+  html {
+    font-size: 16px;
+  }
+}

@@ -96,18 +96,18 @@ export default function Home() {
 
       {/* Header with Auth */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-purple-400" />
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 BEEN
               </span>
             </div>
             <div className="flex items-center gap-4">
               {user ? (
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-300">{user.email}</span>
+                  <span className="text-sm sm:text-sm text-gray-300 truncate max-w-[150px] sm:max-w-none">{user.email}</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -135,8 +135,8 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="relative container mx-auto px-4 py-20 z-10">
+      <section className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="relative container mx-auto px-4 sm:px-6 py-16 sm:py-20 z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -147,7 +147,7 @@ export default function Home() {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 10 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl border border-white/20 text-white px-6 py-3 rounded-full text-sm font-medium mb-8"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl border border-white/20 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-sm font-medium mb-6 sm:mb-8">
             >
               <motion.div
                 animate={{ rotate: 360 }}
@@ -168,7 +168,7 @@ export default function Home() {
               </AnimatePresence>
             </motion.div>
 
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black mb-8">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 sm:mb-8">
               <motion.span
                 className="inline-block bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent"
                 animate={{
@@ -180,7 +180,7 @@ export default function Home() {
                 BEEN
               </motion.span>
               <br />
-              <motion.div className="text-3xl sm:text-4xl lg:text-5xl mt-4 space-y-2">
+              <motion.div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl mt-3 sm:mt-4 space-y-2">
                 {"나를 발견하는 1분".split("").map((char, i) => (
                   <motion.span
                     key={i}
@@ -199,7 +199,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
-              className="text-lg sm:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
+              className="text-lg sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0"
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 font-bold">1000개 이상의 활동</span>을 평가하고{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 font-bold">AI가 분석</span>한 <br /> 당신의 관심 분야와 강점을{" "}
@@ -210,11 +210,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
-              className="flex flex-col sm:flex-row gap-6 justify-center"
+              className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             >
-              <Link href="/evaluate">
+              <Link href="/evaluate" className="w-full sm:w-auto">
                 <motion.button
-                  className="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold text-lg overflow-hidden"
+                  className="group relative w-full sm:w-[200px] px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl font-bold text-lg overflow-hidden cursor-pointer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onMouseEnter={() => setIsHovered(true)}
@@ -226,7 +226,7 @@ export default function Home() {
                     animate={{ x: isHovered ? 0 : "-100%" }}
                     transition={{ duration: 0.3 }}
                   />
-                  <span className="relative z-10 flex items-center gap-3">
+                  <span className="relative z-10 flex items-center justify-center gap-3">
                     <motion.span
                       animate={{ scale: isHovered ? [1, 1.2, 1] : 1 }}
                       transition={{ duration: 0.3 }}
@@ -244,16 +244,18 @@ export default function Home() {
                 </motion.button>
               </Link>
 
-              <motion.button
-                className="px-8 py-4 border-2 border-white/20 rounded-2xl font-bold text-lg backdrop-blur-xl hover:bg-white/10 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  샘플 결과 보기
-                </span>
-              </motion.button>
+              <Link href="/results/sample" className="w-full sm:w-auto">
+                <motion.button
+                  className="w-full sm:w-[200px] px-8 py-4 border-2 border-white/20 rounded-2xl font-bold text-lg backdrop-blur-xl hover:bg-white/10 transition-colors cursor-pointer"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    샘플 결과 보기
+                  </span>
+                </motion.button>
+              </Link>
             </motion.div>
 
             <motion.div

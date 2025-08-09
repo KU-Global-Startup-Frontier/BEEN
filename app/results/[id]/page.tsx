@@ -129,7 +129,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-30">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link href="/evaluate">
               <Button variant="ghost" size="sm" className="gap-2">
@@ -161,8 +161,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
       </header>
 
       {/* Result Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div ref={resultRef} className="max-w-4xl mx-auto space-y-8 bg-white rounded-2xl p-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div ref={resultRef} className="max-w-4xl mx-auto space-y-6 sm:space-y-8 bg-white rounded-2xl p-4 sm:p-6 md:p-8">
           {/* Title Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -173,10 +173,10 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               <Sparkles className="w-4 h-4" />
               AI 분석 완료
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">
               당신의 흥미·강점 분석 결과
             </h1>
-            <p className="text-gray-600">
+            <p className="text-base sm:text-base text-gray-600 break-words">
               25개 활동 평가 기반 개인 맞춤 분석
             </p>
           </motion.div>
@@ -186,9 +186,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6"
+            className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 sm:p-6">
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <Target className="w-5 h-5" />
               관심 분야 분석
             </h2>
@@ -202,7 +202,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             transition={{ delay: 0.3 }}
             className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
               핵심 키워드
             </h2>
@@ -213,7 +213,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.05 }}
-                  className="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700 shadow-sm"
+                  className="px-2 sm:px-3 py-1 bg-white rounded-full text-sm sm:text-sm font-medium text-gray-700 shadow-sm break-words">>
                 >
                   {keyword}
                 </motion.span>
@@ -227,7 +227,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <Award className="w-5 h-5" />
               당신의 강점
             </h2>
@@ -249,7 +249,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             transition={{ delay: 0.8 }}
             className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               추천 활동
             </h2>
@@ -275,14 +275,14 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-8 text-white"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-4 sm:p-6 md:p-8 text-white">
             >
               <div className="text-center">
                 <Lock className="w-12 h-12 mx-auto mb-4 opacity-80" />
-                <h3 className="text-2xl font-bold mb-2">
+                <h3 className="text-2xl sm:text-2xl font-bold mb-2">
                   이 정보를 저장하고 더 많은 기능을 이용하세요!
                 </h3>
-                <p className="text-white/90 mb-6">
+                <p className="text-base sm:text-base text-white/90 mb-4 sm:mb-6 break-words">
                   Google 계정으로 가입하면 평가 기록을 저장하고<br />
                   더 자세한 분석 결과를 받아볼 수 있어요.
                 </p>

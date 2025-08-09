@@ -59,9 +59,6 @@ export function ActivityCard({
       } else if (e.key === '0') {
         e.preventDefault()
         onStatusChange('not_tried')
-      } else if (e.key === ' ') {
-        e.preventDefault()
-        onNext?.()
       } else if (e.key === 'ArrowRight') {
         e.preventDefault()
         onNext?.()
@@ -137,7 +134,7 @@ export function ActivityCard({
       className="perspective-1000 cursor-grab active:cursor-grabbing touch-none"
       style={{ x: dragX }}
     >
-      <Card className="p-8 shadow-xl select-none pointer-events-auto">
+      <Card className="p-4 sm:p-6 md:p-8 shadow-xl select-none pointer-events-auto">
         {/* Category Badge */}
         <div className="flex justify-center mb-6">
           <span className={cn(
@@ -149,20 +146,20 @@ export function ActivityCard({
         </div>
 
         {/* Activity Name */}
-        <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
+        <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 text-center break-words">
           {activity.name}
         </h2>
 
         {/* Description */}
         {activity.description && (
-          <p className="text-gray-600 text-center mb-8">
+          <p className="text-base sm:text-base text-gray-600 text-center mb-6 sm:mb-8 break-words px-2 sm:px-0">
             {activity.description}
           </p>
         )}
 
         {/* Rating Stars */}
         <div className="space-y-4">
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm sm:text-sm text-gray-500 text-center">
             이 활동을 얼마나 해봤는지 평가해 주세요
           </p>
 
@@ -192,18 +189,18 @@ export function ActivityCard({
             ))}
           </div>
 
-          <div className="flex gap-3 text-xs text-gray-500 justify-between px-4">
+          <div className="flex gap-3 text-xs sm:text-xs text-gray-500 justify-between px-2 sm:px-4">
             <span>전혀 관심 없음</span>
             <span>매우 관심 있음</span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex gap-3">
+        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button
               variant={currentStatus === 'not_tried' ? "default" : "outline"}
-              size="lg"
+              size="md"
               className={cn(
                 "flex-1",
                 currentStatus === 'not_tried' && "bg-gray-600 hover:bg-gray-700"
@@ -215,7 +212,7 @@ export function ActivityCard({
             </Button>
             <Button
               variant={currentStatus === 'want_to_try' ? "default" : "outline"}
-              size="lg"
+              size="md"
               className={cn(
                 "flex-1",
                 currentStatus === 'want_to_try'

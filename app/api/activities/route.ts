@@ -11,9 +11,12 @@ export async function GET(request: Request) {
     
     const supabase = createClient()
     
-    // First, get all questions from question_raw table with random ordering
+    // Debug: Check if we can connect to Supabase
+    console.log('Attempting to fetch from quetion_raw table...')
+    
+    // First, get all questions from quetion_raw table with random ordering
     let query = supabase
-      .from('question_raw')
+      .from('quetion_raw')
       .select('*')
     
     // If we need to exclude already rated questions
@@ -33,14 +36,46 @@ export async function GET(request: Request) {
     
     // For random ordering in Supabase, we need to use a different approach
     // First get all questions, then shuffle them
-    const { data: allActivities, error: fetchError } = await query
+    const { data: allActivities, error: fetchError, status, statusText } = await query
+    
+    // Debug: Log complete response details
+    console.log('Query response:', {
+      status,
+      statusText,
+      dataLength: allActivities?.length || 0,
+      error: fetchError,
+      sampleData: allActivities?.[0] // Log first item to see structure
+    })
     
     if (fetchError) {
+      console.error('Error fetching from quetion_raw table:', fetchError)
       throw fetchError
     }
     
+    // Log the fetched data for debugging
+    console.log('Fetched from quetion_raw:', allActivities?.length || 0, 'items')
+    
+    // If no data from quetion_raw, return empty array with message
+    if (!allActivities || allActivities.length === 0) {
+      console.warn('No data found in quetion_raw table')
+      return NextResponse.json({
+        activities: [],
+        total: 0,
+        hasMore: false,
+        message: 'No questions found in quetion_raw table'
+      })
+    }
+    
+    // Map the quetion_raw data to match the expected activity structure
+    const mappedActivities = allActivities.map(item => ({
+      id: item.id?.toString() || '',
+      name: item.question_name || '',
+      category: item.minor_category || item.major_category || '',
+      description: item.description || ''
+    }))
+    
     // Shuffle the activities array using Fisher-Yates algorithm
-    const shuffled = [...(allActivities || [])]
+    const shuffled = [...mappedActivities]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
@@ -48,19 +83,10 @@ export async function GET(request: Request) {
     
     // Apply pagination to the shuffled array
     const activities = shuffled.slice(offset, offset + limit)
-    const error = fetchError
-    
-    if (error) {
-      console.error('Error fetching activities:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch activities' },
-        { status: 500 }
-      )
-    }
     
     return NextResponse.json({
       activities: activities || [],
-      total: activities?.length || 0,
+      total: shuffled.length,
       hasMore: (activities?.length || 0) === limit
     })
   } catch (error) {

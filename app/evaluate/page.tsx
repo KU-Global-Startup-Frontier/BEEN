@@ -8,7 +8,7 @@ import { ActivityCard } from "./components/ActivityCard"
 import { ProgressBar } from "@/components/ui/ProgressBar"
 import { Button } from "@/components/ui/Button"
 import { Loading } from "@/components/ui/Loading"
-import { ChevronLeft, Sparkles } from "lucide-react"
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export default function EvaluatePage() {
@@ -80,10 +80,17 @@ export default function EvaluatePage() {
         
         const response = await fetch(`/api/activities?${queryParams}`)
         const data = await response.json()
+        
+        console.log('API Response:', data)
 
         if (data.activities && data.activities.length > 0) {
+          console.log(`Loaded ${data.activities.length} questions from quetion_raw table`)
           setActivities(data.activities)
         } else {
+          console.warn('No activities returned from API, using fallback data')
+          if (data.message) {
+            console.warn('API Message:', data.message)
+          }
           // Fallback to mock data if API fails
           setActivities([
             { id: "1", name: "블로그 글쓰기", category: "창작", description: "생각과 경험을 글로 표현하는 활동" },
@@ -147,88 +154,56 @@ export default function EvaluatePage() {
         setIsFetchingActivities(false)
       }
 
-      // Load existing ratings from API if available
-      if (sessionId) {
-        try {
-          const response = await fetch(`/api/ratings?sessionId=${sessionId}`)
-          const data = await response.json()
-
-          if (data.ratings && data.ratings.length > 0) {
-            // Restore ratings from database
-            data.ratings.forEach((rating: any) => {
-              setRating(rating.activity_id, rating.score)
-            })
-          }
-        } catch (error) {
-          console.error('Failed to load existing ratings:', error)
-        }
-      }
+      // Ratings are now stored in memory only (no API calls)
     }
 
     init()
   }, [sessionId, initSession, setRating])
 
-  // Save rating to database
-  const saveRatingToDatabase = useCallback(async (activityId: string, score: number) => {
-    if (!sessionId) return
 
-    // setIsSaving(true) - UI feedback removed
-    try {
-      await fetch('/api/ratings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activityId,
-          score,
-          sessionId,
-        }),
-      })
-    } catch (error) {
-      console.error('Failed to save rating:', error)
-    } finally {
-      // setIsSaving(false) - UI feedback removed
-    }
-  }, [sessionId])
-
-  const handleRate = useCallback(async (score: number) => {
+  const handleRate = useCallback((score: number) => {
     const activity = activities[currentIndex]
     if (!activity) return
 
-    // Update local state
+    // Update local state only
     setRating(activity.id, score)
 
-    // Save to database
-    await saveRatingToDatabase(activity.id, score)
-
-    // Move to next card with shorter delay
+    // Move to next card immediately
     if (currentIndex < activities.length - 1) {
-      setTimeout(() => {
-        setCurrentIndex(currentIndex + 1)
-      }, 150)
+      setCurrentIndex(currentIndex + 1)
+    } else {
+      // Check if all activities are rated when reaching the last card
+      const allRated = activities.every(activity => 
+        ratings.has(activity.id) || activityStatuses.has(activity.id)
+      )
+      if (allRated) {
+        setHasCompletedAll(true)
+      }
     }
-  }, [activities, currentIndex, setRating, saveRatingToDatabase])
+  }, [activities, currentIndex, setRating, ratings, activityStatuses])
 
-  const handleStatusChange = useCallback(async (status: 'not_tried' | 'want_to_try' | null) => {
+  const handleStatusChange = useCallback((status: 'not_tried' | 'want_to_try' | null) => {
     const activity = activities[currentIndex]
     if (!activity) return
 
-    // Update local state
+    // Update local state only
     setActivityStatus(activity.id, status)
 
-    // Save to database if status is set
+    // Move to next card immediately if status is set (not null)
     if (status) {
-      await saveRatingToDatabase(activity.id, status === 'not_tried' ? -1 : -2)
-    }
-
-    // Move to next card if status is set (not null)
-    if (status && currentIndex < activities.length - 1) {
-      setTimeout(() => {
+      if (currentIndex < activities.length - 1) {
         setCurrentIndex(currentIndex + 1)
-      }, 150)
+      } else {
+        // Check if all activities are rated when reaching the last card
+        const allRated = activities.every(activity => 
+          ratings.has(activity.id) || activityStatuses.has(activity.id)
+        )
+        if (allRated) {
+          setHasCompletedAll(true)
+        }
+      }
     }
-  }, [activities, currentIndex, setActivityStatus, saveRatingToDatabase])
+  }, [activities, currentIndex, setActivityStatus, ratings, activityStatuses])
 
   const handleNext = useCallback(() => {
     if (currentIndex < activities.length - 1) {
@@ -250,9 +225,6 @@ export default function EvaluatePage() {
     }
   }, [currentIndex])
 
-  const handleSkip = () => {
-    handleNext()
-  }
 
   const handleAnalyze = async () => {
     if (!canAnalyze()) return
@@ -305,7 +277,7 @@ export default function EvaluatePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       {/* Header */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-30">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2">
@@ -315,23 +287,16 @@ export default function EvaluatePage() {
             </Link>
 
             <div className="text-center">
-              <h1 className="text-xl font-bold text-gray-900">활동 평가</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900">활동 평가</h1>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSkip}
-              disabled={currentIndex >= activities.length - 1}
-            >
-              건너뛰기
-            </Button>
+            <div className="w-16" />
           </div>
         </div>
       </header>
 
       {/* Progress Bar */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <ProgressBar
           value={ratedCount}
           max={100}
@@ -341,8 +306,42 @@ export default function EvaluatePage() {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 pb-20">
-        <div className="max-w-lg mx-auto touch-none">
+      <main className="container mx-auto px-4 sm:px-6 pb-20">
+        <div className="max-w-lg mx-auto touch-none relative">
+          {/* Desktop Navigation Buttons */}
+          <div className="hidden md:block">
+            {currentIndex > 0 && !hasCompletedAll && (
+              <Button
+                variant="ghost"
+                size="lg"
+                className="absolute left-[-80px] top-1/2 transform -translate-y-1/2 rounded-full w-12 h-12 p-0"
+                onClick={handlePrevious}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+            )}
+            {currentIndex < activities.length - 1 && !hasCompletedAll && currentActivity && (
+              <Button
+                variant="ghost"
+                size="lg"
+                className="absolute right-[-80px] top-1/2 transform -translate-y-1/2 rounded-full w-12 h-12 p-0"
+                onClick={handleNext}
+                disabled={!ratings.has(currentActivity.id) && !activityStatuses.has(currentActivity.id)}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            )}
+          </div>
+
+          {/* Current Position Indicator */}
+          {!hasCompletedAll && currentActivity && (
+            <div className="text-center mb-4">
+              <span className="text-sm text-gray-500">
+                {currentIndex + 1}번째 평가 중
+              </span>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             {hasCompletedAll ? (
               <motion.div
@@ -351,8 +350,8 @@ export default function EvaluatePage() {
                 className="text-center p-8 bg-white rounded-lg shadow-lg"
               >
                 <Sparkles className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-4">모든 질문을 평가하셨네요! 🎉</h2>
-                <p className="text-gray-600 mb-6">
+                <h2 className="text-2xl sm:text-2xl font-bold mb-3 sm:mb-4">모든 질문을 평가하셨네요! 🎉</h2>
+                <p className="text-base sm:text-base text-gray-600 mb-4 sm:mb-6">
                   현재 {ratedCount}개의 활동을 평가하셨습니다.
                 </p>
                 <div className="space-y-3">
@@ -392,6 +391,36 @@ export default function EvaluatePage() {
             ) : null}
           </AnimatePresence>
 
+          {/* Mobile Navigation Buttons */}
+          {!hasCompletedAll && currentActivity && (
+            <div className="flex justify-between items-center mt-6 md:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrevious}
+                disabled={currentIndex === 0}
+                className="gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                이전
+              </Button>
+              <span className="text-sm text-gray-500">
+                {currentIndex + 1}번째
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNext}
+                disabled={currentIndex >= activities.length - 1 || 
+                  (!ratings.has(currentActivity.id) && !activityStatuses.has(currentActivity.id))}
+                className="gap-1"
+              >
+                다음
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
           {/* Navigation hints */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -399,11 +428,11 @@ export default function EvaluatePage() {
             transition={{ delay: 1 }}
             className="mt-8 space-y-2"
           >
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm sm:text-sm text-gray-500">
               좌우로 드래그하여 카드 넘기기
             </p>
-            <p className="text-center text-xs text-gray-400">
-              키보드: 1-5 (점수), 0 (안 할거에요), ← → (이동), Space (건너뛰기)
+            <p className="text-center text-xs sm:text-xs text-gray-400">
+              키보드: 1-5 (점수), 0 (안 할거에요), ← → (이동)
             </p>
           </motion.div>
         </div>
@@ -413,7 +442,7 @@ export default function EvaluatePage() {
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4"
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 sm:p-4"
       >
         <div className="container mx-auto max-w-lg">
           {ratedCount < 20 ? (
@@ -426,7 +455,7 @@ export default function EvaluatePage() {
                 <Sparkles className="w-5 h-5" />
                 {20 - ratedCount}개만 더 평가하면 결과를 볼 수 있어요!
               </Button>
-              <p className="text-xs text-center text-gray-500 mt-2">
+              <p className="text-xs sm:text-xs text-center text-gray-500 mt-2">
                 최소 20개 이상 평가가 필요합니다
               </p>
             </div>
@@ -447,7 +476,7 @@ export default function EvaluatePage() {
                   </>
                 )}
               </Button>
-              <p className="text-xs text-center text-green-600 mt-2">
+              <p className="text-xs sm:text-xs text-center text-green-600 mt-2">
                 더 평가하면 더 정확한 결과를 볼 수 있어요!
               </p>
             </div>
