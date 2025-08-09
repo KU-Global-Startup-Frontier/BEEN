@@ -1,14 +1,10 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/Button"
-import { ArrowRight, Sparkles, Target, Share2, BarChart3, Zap, Users, Star, TrendingUp, Brain, Heart, Palette, Code, Music, Camera, LogOut } from "lucide-react"
+import { ArrowRight, Sparkles, Target, Share2, BarChart3, Zap, Users, Star, TrendingUp, Brain, Heart, Palette, Code, Music, Camera } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
-import { GoogleAuthButton } from "@/components/GoogleAuthButton"
-import { createClient } from "@/lib/supabase/client"
-import { User } from "@supabase/supabase-js"
 
 const FloatingElements = dynamic(() => import("@/components/FloatingElements"), {
   ssr: false,
@@ -19,9 +15,6 @@ export default function Home() {
   const [currentTestIndex, setCurrentTestIndex] = useState(0)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [scrollY, setScrollY] = useState(0)
-  const [user, setUser] = useState<User | null>(null)
-  const [mounted, setMounted] = useState(false)
-  const supabase = createClient()
 
   const viralTests = [
     { name: "관심사 분석", icon: Heart, color: "from-pink-500 to-rose-500" },
@@ -31,7 +24,6 @@ export default function Home() {
   ]
 
   useEffect(() => {
-    setMounted(true)
     const interval = setInterval(() => {
       setCurrentTestIndex((prev) => (prev + 1) % viralTests.length)
     }, 3000)
@@ -39,28 +31,6 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
-    
-    // Check for logged in user
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
-  }, [mounted])
-
-  useEffect(() => {
-    if (!mounted) return
-    
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -73,7 +43,7 @@ export default function Home() {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [mounted])
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -99,48 +69,6 @@ export default function Home() {
 
       {/* Floating Elements */}
       <FloatingElements />
-
-      {/* Header with Auth */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-purple-400" />
-              <span className="text-xl sm:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                BEEN
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              {mounted && (
-                user ? (
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm sm:text-sm text-gray-300 truncate max-w-[150px] sm:max-w-none">{user.email}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={async () => {
-                        await supabase.auth.signOut()
-                        setUser(null)
-                      }}
-                      className="text-white hover:text-gray-300"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      로그아웃
-                    </Button>
-                  </div>
-                ) : (
-                  <GoogleAuthButton
-                    text="로그인"
-                    variant="ghost"
-                    size="sm"
-                    className="text-white hover:bg-white/10"
-                  />
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center overflow-hidden">

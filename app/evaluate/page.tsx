@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button"
 import { Loading } from "@/components/ui/Loading"
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 export default function EvaluatePage() {
   const router = useRouter()
@@ -70,6 +71,53 @@ export default function EvaluatePage() {
     const init = async () => {
       if (!sessionId) {
         initSession()
+      }
+
+      // Get or create user
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      
+      if (authUser?.email) {
+        // Create or get user from database
+        try {
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: authUser.email,
+              name: authUser.user_metadata?.name || authUser.email.split('@')[0]
+            }),
+          })
+          
+          const data = await response.json()
+          if (data.user) {
+            setUserId(data.user.user_id.toString())
+          }
+        } catch (error) {
+          console.error('Failed to create/get user:', error)
+        }
+      } else {
+        // Create anonymous user
+        try {
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: 'Anonymous User'
+            }),
+          })
+          
+          const data = await response.json()
+          if (data.user) {
+            setUserId(data.user.user_id.toString())
+          }
+        } catch (error) {
+          console.error('Failed to create anonymous user:', error)
+        }
       }
 
       // Fetch activities from API with random ordering
@@ -160,7 +208,7 @@ export default function EvaluatePage() {
     }
 
     init()
-  }, [sessionId, userId, initSession, setRating])
+  }, [sessionId, initSession, setUserId])
 
 
   const handleRate = useCallback(async (score: number) => {
