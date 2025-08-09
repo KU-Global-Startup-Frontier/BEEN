@@ -13,16 +13,18 @@ import Link from "next/link"
 
 export default function EvaluatePage() {
   const router = useRouter()
-  const { 
-    sessionId, 
-    ratings, 
-    ratedCount, 
-    initSession, 
-    setRating, 
+  const {
+    sessionId,
+    ratings,
+    activityStatuses,
+    ratedCount,
+    initSession,
+    setRating,
+    setActivityStatus,
     canAnalyze,
-    setIsAnalyzing 
+    setIsAnalyzing
   } = useStore()
-  
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [activities, setActivities] = useState<any[]>([])
@@ -35,12 +37,12 @@ export default function EvaluatePage() {
       if (!sessionId) {
         initSession()
       }
-      
+
       // Fetch activities from API
       try {
         const response = await fetch('/api/activities')
         const data = await response.json()
-        
+
         if (data.activities && data.activities.length > 0) {
           setActivities(data.activities)
         } else {
@@ -106,13 +108,13 @@ export default function EvaluatePage() {
       } finally {
         setIsFetchingActivities(false)
       }
-      
+
       // Load existing ratings from API if available
       if (sessionId) {
         try {
           const response = await fetch(`/api/ratings?sessionId=${sessionId}`)
           const data = await response.json()
-          
+
           if (data.ratings && data.ratings.length > 0) {
             // Restore ratings from database
             data.ratings.forEach((rating: any) => {
@@ -124,14 +126,14 @@ export default function EvaluatePage() {
         }
       }
     }
-    
+
     init()
   }, [sessionId, initSession, setRating])
 
   // Save rating to database
   const saveRatingToDatabase = useCallback(async (activityId: string, score: number) => {
     if (!sessionId) return
-    
+
     // setIsSaving(true) - UI feedback removed
     try {
       await fetch('/api/ratings', {
@@ -155,33 +157,63 @@ export default function EvaluatePage() {
   const handleRate = useCallback(async (score: number) => {
     const activity = activities[currentIndex]
     if (!activity) return
-    
+
     // Update local state
     setRating(activity.id, score)
-    
+
     // Save to database
     await saveRatingToDatabase(activity.id, score)
-    
-    // Move to next card
+
+    // Move to next card with shorter delay
     if (currentIndex < activities.length - 1) {
       setTimeout(() => {
         setCurrentIndex(currentIndex + 1)
-      }, 300)
+      }, 150)
     }
   }, [activities, currentIndex, setRating, saveRatingToDatabase])
 
-  const handleSkip = () => {
+  const handleStatusChange = useCallback(async (status: 'not_tried' | 'want_to_try' | null) => {
+    const activity = activities[currentIndex]
+    if (!activity) return
+
+    // Update local state
+    setActivityStatus(activity.id, status)
+
+    // Save to database if status is set
+    if (status) {
+      await saveRatingToDatabase(activity.id, status === 'not_tried' ? -1 : -2)
+    }
+
+    // Move to next card if status is set (not null)
+    if (status && currentIndex < activities.length - 1) {
+      setTimeout(() => {
+        setCurrentIndex(currentIndex + 1)
+      }, 150)
+    }
+  }, [activities, currentIndex, setActivityStatus, saveRatingToDatabase])
+
+  const handleNext = useCallback(() => {
     if (currentIndex < activities.length - 1) {
       setCurrentIndex(currentIndex + 1)
     }
+  }, [currentIndex, activities.length])
+
+  const handlePrevious = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1)
+    }
+  }, [currentIndex])
+
+  const handleSkip = () => {
+    handleNext()
   }
 
   const handleAnalyze = async () => {
     if (!canAnalyze()) return
-    
+
     setIsAnalyzing(true)
     setIsLoading(true)
-    
+
     try {
       // Call analysis API
       const response = await fetch('/api/analyze', {
@@ -193,9 +225,9 @@ export default function EvaluatePage() {
           sessionId,
         }),
       })
-      
+
       const data = await response.json()
-      
+
       if (data.id) {
         // Navigate to results page
         router.push(`/results/${data.id}`)
@@ -213,6 +245,7 @@ export default function EvaluatePage() {
   const currentActivity = activities[currentIndex]
   const hasRated = currentActivity && ratings.has(currentActivity.id)
   const currentRating = hasRated ? ratings.get(currentActivity.id) : undefined
+  const currentStatus = currentActivity ? activityStatuses.get(currentActivity.id) : undefined
 
   if (isFetchingActivities) {
     return (
@@ -234,13 +267,13 @@ export default function EvaluatePage() {
                 처음으로
               </Button>
             </Link>
-            
+
             <div className="text-center">
               <h1 className="text-xl font-bold text-gray-900">활동 평가</h1>
             </div>
-            
-            <Button 
-              variant="ghost" 
+
+            <Button
+              variant="ghost"
               size="sm"
               onClick={handleSkip}
               disabled={currentIndex >= activities.length - 1}
@@ -253,9 +286,9 @@ export default function EvaluatePage() {
 
       {/* Progress Bar */}
       <div className="container mx-auto px-4 py-6">
-        <ProgressBar 
-          value={ratedCount} 
-          max={100} 
+        <ProgressBar
+          value={ratedCount}
+          max={100}
           showLabel={true}
           animated={true}
         />
@@ -263,28 +296,37 @@ export default function EvaluatePage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 pb-20">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg mx-auto touch-none">
           <AnimatePresence mode="wait">
             {currentActivity && (
               <ActivityCard
                 key={currentActivity.id}
                 activity={currentActivity}
                 onRate={handleRate}
+                onStatusChange={handleStatusChange}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
                 currentRating={currentRating}
+                currentStatus={currentStatus}
                 index={currentIndex}
                 total={activities.length}
               />
             )}
           </AnimatePresence>
 
-          {/* Keyboard shortcuts hint */}
+          {/* Navigation hints */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
-            className="mt-8 text-center text-sm text-gray-500"
+            className="mt-8 space-y-2"
           >
-            <p>키보드 단축키: 1-5 (점수), 0 (안 해봤어요), Space (건너뛰기)</p>
+            <p className="text-center text-sm text-gray-500">
+              좌우로 드래그하여 카드 넘기기
+            </p>
+            <p className="text-center text-xs text-gray-400">
+              키보드: 1-5 (점수), 0 (안 할거에요), ← → (이동), Space (건너뛰기)
+            </p>
           </motion.div>
         </div>
       </main>
