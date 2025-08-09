@@ -94,15 +94,12 @@ export function ActivityCard({
     >
       <Card className="p-8 shadow-xl">
         {/* Category Badge */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-center mb-6">
           <span className={cn(
             "px-3 py-1 rounded-full text-sm font-medium",
             categoryColors[activity.category] || "bg-gray-100 text-gray-700"
           )}>
             {activity.category}
-          </span>
-          <span className="text-sm text-gray-500">
-            {index + 1} / {total}
           </span>
         </div>
 

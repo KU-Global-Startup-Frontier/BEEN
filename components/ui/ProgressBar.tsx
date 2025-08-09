@@ -29,7 +29,7 @@ export function ProgressBar({
             진행률
           </span>
           <span className="text-sm font-medium text-gray-700">
-            {value} / {max} ({Math.round(percentage)}%)
+            {value}개 평가 완료
           </span>
         </div>
       )}

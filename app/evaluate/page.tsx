@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useStore } from "@/lib/store/useStore"
@@ -10,35 +10,6 @@ import { Button } from "@/components/ui/Button"
 import { Loading } from "@/components/ui/Loading"
 import { ChevronLeft, Sparkles } from "lucide-react"
 import Link from "next/link"
-
-// 임시 활동 데이터 (나중에 API에서 가져올 예정)
-const mockActivities = [
-  { id: "1", name: "블로그 글쓰기", category: "창작", description: "생각과 경험을 글로 표현하는 활동" },
-  { id: "2", name: "소설 쓰기", category: "창작", description: "상상력을 발휘해 이야기를 창작하는 활동" },
-  { id: "3", name: "프로그래밍 공부", category: "학습", description: "코딩과 개발 기술을 배우는 활동" },
-  { id: "4", name: "조깅/러닝", category: "운동", description: "달리기를 통한 유산소 운동" },
-  { id: "5", name: "봉사활동", category: "사회활동", description: "사회에 기여하는 자원봉사 활동" },
-  { id: "6", name: "웹 개발", category: "기술", description: "웹사이트와 웹 애플리케이션 개발" },
-  { id: "7", name: "창업 준비", category: "비즈니스", description: "사업 아이디어 구상과 준비" },
-  { id: "8", name: "전시회 관람", category: "예술", description: "미술 작품 감상" },
-  { id: "9", name: "요리", category: "취미", description: "음식을 만드는 활동" },
-  { id: "10", name: "사진 촬영", category: "창작", description: "순간을 포착하고 예술적으로 표현하는 활동" },
-  { id: "11", name: "요가", category: "운동", description: "몸과 마음의 균형을 찾는 운동" },
-  { id: "12", name: "독서", category: "학습", description: "책을 읽으며 지식과 교양을 쌓는 활동" },
-  { id: "13", name: "음악 작곡", category: "창작", description: "멜로디와 화음을 만들어내는 활동" },
-  { id: "14", name: "등산", category: "운동", description: "자연 속에서 즐기는 신체 활동" },
-  { id: "15", name: "동아리 활동", category: "사회활동", description: "관심사를 공유하는 모임 활동" },
-  { id: "16", name: "데이터 분석", category: "기술", description: "데이터를 수집하고 분석하는 활동" },
-  { id: "17", name: "마케팅 기획", category: "비즈니스", description: "마케팅 전략 수립과 실행" },
-  { id: "18", name: "영화 감상", category: "예술", description: "영화를 보고 감상하는 활동" },
-  { id: "19", name: "여행", category: "취미", description: "국내외 여행과 탐험" },
-  { id: "20", name: "팟캐스트 제작", category: "창작", description: "음성 콘텐츠를 기획하고 제작하는 활동" },
-  { id: "21", name: "헬스/웨이트", category: "운동", description: "근력 운동과 체력 단련" },
-  { id: "22", name: "외국어 학습", category: "학습", description: "새로운 언어를 배우고 익히는 활동" },
-  { id: "23", name: "그림 그리기", category: "창작", description: "시각적 예술 작품을 창작하는 활동" },
-  { id: "24", name: "축구", category: "운동", description: "팀 스포츠로 즐기는 구기 운동" },
-  { id: "25", name: "네트워킹 이벤트 참가", category: "사회활동", description: "인맥을 넓히는 사교 활동" },
-]
 
 export default function EvaluatePage() {
   const router = useRouter()
@@ -54,25 +25,150 @@ export default function EvaluatePage() {
   
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [activities] = useState(mockActivities)
+  const [activities, setActivities] = useState<any[]>([])
+  const [isFetchingActivities, setIsFetchingActivities] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
 
+  // Initialize session and fetch activities
   useEffect(() => {
-    if (!sessionId) {
-      initSession()
+    const init = async () => {
+      if (!sessionId) {
+        initSession()
+      }
+      
+      // Fetch activities from API
+      try {
+        const response = await fetch('/api/activities')
+        const data = await response.json()
+        
+        if (data.activities && data.activities.length > 0) {
+          setActivities(data.activities)
+        } else {
+          // Fallback to mock data if API fails
+          setActivities([
+            { id: "1", name: "블로그 글쓰기", category: "창작", description: "생각과 경험을 글로 표현하는 활동" },
+            { id: "2", name: "소설 쓰기", category: "창작", description: "상상력을 발휘해 이야기를 창작하는 활동" },
+            { id: "3", name: "프로그래밍 공부", category: "학습", description: "코딩과 개발 기술을 배우는 활동" },
+            { id: "4", name: "조깅/러닝", category: "운동", description: "달리기를 통한 유산소 운동" },
+            { id: "5", name: "봉사활동", category: "사회활동", description: "사회에 기여하는 자원봉사 활동" },
+            { id: "6", name: "웹 개발", category: "기술", description: "웹사이트와 웹 애플리케이션 개발" },
+            { id: "7", name: "창업 준비", category: "비즈니스", description: "사업 아이디어 구상과 준비" },
+            { id: "8", name: "전시회 관람", category: "예술", description: "미술 작품 감상" },
+            { id: "9", name: "요리", category: "취미", description: "음식을 만드는 활동" },
+            { id: "10", name: "사진 촬영", category: "창작", description: "순간을 포착하고 예술적으로 표현하는 활동" },
+            { id: "11", name: "요가", category: "운동", description: "몸과 마음의 균형을 찾는 운동" },
+            { id: "12", name: "독서", category: "학습", description: "책을 읽으며 지식과 교양을 쌓는 활동" },
+            { id: "13", name: "음악 작곡", category: "창작", description: "멜로디와 화음을 만들어내는 활동" },
+            { id: "14", name: "등산", category: "운동", description: "자연 속에서 즐기는 신체 활동" },
+            { id: "15", name: "동아리 활동", category: "사회활동", description: "관심사를 공유하는 모임 활동" },
+            { id: "16", name: "데이터 분석", category: "기술", description: "데이터를 수집하고 분석하는 활동" },
+            { id: "17", name: "마케팅 기획", category: "비즈니스", description: "마케팅 전략 수립과 실행" },
+            { id: "18", name: "영화 감상", category: "예술", description: "영화를 보고 감상하는 활동" },
+            { id: "19", name: "여행", category: "취미", description: "국내외 여행과 탐험" },
+            { id: "20", name: "팟캐스트 제작", category: "창작", description: "음성 콘텐츠를 기획하고 제작하는 활동" },
+            { id: "21", name: "헬스/웨이트", category: "운동", description: "근력 운동과 체력 단련" },
+            { id: "22", name: "외국어 학습", category: "학습", description: "새로운 언어를 배우고 익히는 활동" },
+            { id: "23", name: "그림 그리기", category: "창작", description: "시각적 예술 작품을 창작하는 활동" },
+            { id: "24", name: "축구", category: "운동", description: "팀 스포츠로 즐기는 구기 운동" },
+            { id: "25", name: "네트워킹 이벤트 참가", category: "사회활동", description: "인맥을 넓히는 사교 활동" },
+          ])
+        }
+      } catch (error) {
+        console.error('Failed to fetch activities:', error)
+        // Use fallback mock data
+        setActivities([
+          { id: "1", name: "블로그 글쓰기", category: "창작", description: "생각과 경험을 글로 표현하는 활동" },
+          { id: "2", name: "소설 쓰기", category: "창작", description: "상상력을 발휘해 이야기를 창작하는 활동" },
+          { id: "3", name: "프로그래밍 공부", category: "학습", description: "코딩과 개발 기술을 배우는 활동" },
+          { id: "4", name: "조깅/러닝", category: "운동", description: "달리기를 통한 유산소 운동" },
+          { id: "5", name: "봉사활동", category: "사회활동", description: "사회에 기여하는 자원봉사 활동" },
+          { id: "6", name: "웹 개발", category: "기술", description: "웹사이트와 웹 애플리케이션 개발" },
+          { id: "7", name: "창업 준비", category: "비즈니스", description: "사업 아이디어 구상과 준비" },
+          { id: "8", name: "전시회 관람", category: "예술", description: "미술 작품 감상" },
+          { id: "9", name: "요리", category: "취미", description: "음식을 만드는 활동" },
+          { id: "10", name: "사진 촬영", category: "창작", description: "순간을 포착하고 예술적으로 표현하는 활동" },
+          { id: "11", name: "요가", category: "운동", description: "몸과 마음의 균형을 찾는 운동" },
+          { id: "12", name: "독서", category: "학습", description: "책을 읽으며 지식과 교양을 쌓는 활동" },
+          { id: "13", name: "음악 작곡", category: "창작", description: "멜로디와 화음을 만들어내는 활동" },
+          { id: "14", name: "등산", category: "운동", description: "자연 속에서 즐기는 신체 활동" },
+          { id: "15", name: "동아리 활동", category: "사회활동", description: "관심사를 공유하는 모임 활동" },
+          { id: "16", name: "데이터 분석", category: "기술", description: "데이터를 수집하고 분석하는 활동" },
+          { id: "17", name: "마케팅 기획", category: "비즈니스", description: "마케팅 전략 수립과 실행" },
+          { id: "18", name: "영화 감상", category: "예술", description: "영화를 보고 감상하는 활동" },
+          { id: "19", name: "여행", category: "취미", description: "국내외 여행과 탐험" },
+          { id: "20", name: "팟캐스트 제작", category: "창작", description: "음성 콘텐츠를 기획하고 제작하는 활동" },
+          { id: "21", name: "헬스/웨이트", category: "운동", description: "근력 운동과 체력 단련" },
+          { id: "22", name: "외국어 학습", category: "학습", description: "새로운 언어를 배우고 익히는 활동" },
+          { id: "23", name: "그림 그리기", category: "창작", description: "시각적 예술 작품을 창작하는 활동" },
+          { id: "24", name: "축구", category: "운동", description: "팀 스포츠로 즐기는 구기 운동" },
+          { id: "25", name: "네트워킹 이벤트 참가", category: "사회활동", description: "인맥을 넓히는 사교 활동" },
+        ])
+      } finally {
+        setIsFetchingActivities(false)
+      }
+      
+      // Load existing ratings from API if available
+      if (sessionId) {
+        try {
+          const response = await fetch(`/api/ratings?sessionId=${sessionId}`)
+          const data = await response.json()
+          
+          if (data.ratings && data.ratings.length > 0) {
+            // Restore ratings from database
+            data.ratings.forEach((rating: any) => {
+              setRating(rating.activity_id, rating.score)
+            })
+          }
+        } catch (error) {
+          console.error('Failed to load existing ratings:', error)
+        }
+      }
     }
-  }, [sessionId, initSession])
+    
+    init()
+  }, [sessionId, initSession, setRating])
 
-  const handleRate = (score: number) => {
+  // Save rating to database
+  const saveRatingToDatabase = useCallback(async (activityId: string, score: number) => {
+    if (!sessionId) return
+    
+    setIsSaving(true)
+    try {
+      await fetch('/api/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activityId,
+          score,
+          sessionId,
+        }),
+      })
+    } catch (error) {
+      console.error('Failed to save rating:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }, [sessionId])
+
+  const handleRate = useCallback(async (score: number) => {
     const activity = activities[currentIndex]
+    if (!activity) return
+    
+    // Update local state
     setRating(activity.id, score)
     
-    // 다음 카드로 이동
+    // Save to database
+    await saveRatingToDatabase(activity.id, score)
+    
+    // Move to next card
     if (currentIndex < activities.length - 1) {
       setTimeout(() => {
         setCurrentIndex(currentIndex + 1)
       }, 300)
     }
-  }
+  }, [activities, currentIndex, setRating, saveRatingToDatabase])
 
   const handleSkip = () => {
     if (currentIndex < activities.length - 1) {
@@ -86,15 +182,45 @@ export default function EvaluatePage() {
     setIsAnalyzing(true)
     setIsLoading(true)
     
-    // 임시로 결과 페이지로 이동 (나중에 실제 분석 API 연동)
-    setTimeout(() => {
+    try {
+      // Call analysis API
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+        }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.id) {
+        // Navigate to results page
+        router.push(`/results/${data.id}`)
+      } else {
+        // Fallback to sample results
+        router.push('/results/sample')
+      }
+    } catch (error) {
+      console.error('Failed to analyze:', error)
+      // Fallback to sample results
       router.push('/results/sample')
-    }, 2000)
+    }
   }
 
   const currentActivity = activities[currentIndex]
   const hasRated = currentActivity && ratings.has(currentActivity.id)
   const currentRating = hasRated ? ratings.get(currentActivity.id) : undefined
+
+  if (isFetchingActivities) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+        <Loading size="lg" text="활동 목록을 불러오는 중..." />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -111,9 +237,9 @@ export default function EvaluatePage() {
             
             <div className="text-center">
               <h1 className="text-xl font-bold text-gray-900">활동 평가</h1>
-              <p className="text-sm text-gray-500">
-                {currentIndex + 1} / {activities.length}
-              </p>
+              {isSaving && (
+                <p className="text-xs text-gray-500">저장 중...</p>
+              )}
             </div>
             
             <Button 
