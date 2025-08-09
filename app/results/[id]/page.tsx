@@ -82,7 +82,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
       })
       
       const link = document.createElement('a')
-      link.download = `been-result-${Date.now()}.png`
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+      link.download = `been-result-${timestamp}.png`
       link.href = canvas.toDataURL()
       link.click()
     } catch (error) {

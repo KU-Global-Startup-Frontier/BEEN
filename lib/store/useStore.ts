@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { generateSessionId } from '@/lib/utils'
 
 export interface Activity {
   id: string
@@ -65,7 +66,7 @@ export const useStore = create<AppState>()(
       
       // Actions
       initSession: () => {
-        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        const sessionId = generateSessionId()
         set({ sessionId })
       },
       

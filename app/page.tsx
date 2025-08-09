@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/Button"
 import { ArrowRight, Sparkles, Target, Share2, BarChart3, Zap, Users, Star, TrendingUp, Brain, Heart, Palette, Code, Music, Camera } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+
+const FloatingElements = dynamic(() => import("@/components/FloatingElements"), {
+  ssr: false,
+})
 
 export default function Home() {
   const [isHovered, setIsHovered] = useState(false)
@@ -64,27 +69,7 @@ export default function Home() {
       </div>
 
       {/* Floating Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        {typeof window !== 'undefined' && [...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
-            }}
-            animate={{
-              y: [null, -100],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-          />
-        ))}
-      </div>
+      <FloatingElements />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -133,7 +118,7 @@ export default function Home() {
               </motion.span>
               <br />
               <motion.div className="text-3xl sm:text-4xl lg:text-5xl mt-4 space-y-2">
-                {"나를 발견하는 5분".split("").map((char, i) => (
+                {"나를 발견하는 1분".split("").map((char, i) => (
                   <motion.span
                     key={i}
                     initial={{ opacity: 0, y: 50 }}
@@ -216,7 +201,7 @@ export default function Home() {
             >
               {[
                 { icon: Users, text: "10,000+", label: "사용자" },
-                { icon: Zap, text: "5분", label: "평균 소요" },
+                { icon: Zap, text: "1분", label: "평균 소요" },
                 { icon: Star, text: "4.9", label: "평점" },
               ].map((stat, i) => (
                 <motion.div

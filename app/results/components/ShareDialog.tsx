@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Modal } from "@/components/ui/Modal"
 import { Button } from "@/components/ui/Button"
 import { Copy, Check, MessageCircle, Link2, Instagram } from "lucide-react"
@@ -14,9 +14,13 @@ interface ShareDialogProps {
 
 export function ShareDialog({ isOpen, onClose, resultId }: ShareDialogProps) {
   const [isCopied, setIsCopied] = useState(false)
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/results/${resultId}`
-    : ''
+  const [shareUrl, setShareUrl] = useState('')
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setShareUrl(`${window.location.origin}/results/${resultId}`)
+    }
+  }, [resultId])
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl)

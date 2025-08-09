@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     }
     
     return NextResponse.json({
-      id: savedResult?.id || 'temp-' + Date.now(),
+      id: savedResult?.id || `temp-${crypto.randomUUID()}`,
       insights: analysisResult
     })
   } catch (error) {

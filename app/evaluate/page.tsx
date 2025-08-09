@@ -27,7 +27,7 @@ export default function EvaluatePage() {
   const [isLoading, setIsLoading] = useState(false)
   const [activities, setActivities] = useState<any[]>([])
   const [isFetchingActivities, setIsFetchingActivities] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isSaving, setIsSaving] = useState(false) // eslint-disable-line @typescript-eslint/no-unused-vars
 
   // Initialize session and fetch activities
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function EvaluatePage() {
   const saveRatingToDatabase = useCallback(async (activityId: string, score: number) => {
     if (!sessionId) return
     
-    setIsSaving(true)
+    // setIsSaving(true) - UI feedback removed
     try {
       await fetch('/api/ratings', {
         method: 'POST',
@@ -148,7 +148,7 @@ export default function EvaluatePage() {
     } catch (error) {
       console.error('Failed to save rating:', error)
     } finally {
-      setIsSaving(false)
+      // setIsSaving(false) - UI feedback removed
     }
   }, [sessionId])
 
@@ -237,9 +237,6 @@ export default function EvaluatePage() {
             
             <div className="text-center">
               <h1 className="text-xl font-bold text-gray-900">활동 평가</h1>
-              {isSaving && (
-                <p className="text-xs text-gray-500">저장 중...</p>
-              )}
             </div>
             
             <Button 
@@ -293,31 +290,50 @@ export default function EvaluatePage() {
       </main>
 
       {/* Fixed Bottom CTA */}
-      {canAnalyze() && (
-        <motion.div
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4"
-        >
-          <div className="container mx-auto max-w-lg">
-            <Button
-              size="lg"
-              className="w-full gap-2"
-              onClick={handleAnalyze}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loading size="sm" />
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  분석 결과 보기 ({ratedCount}개 평가 완료)
-                </>
-              )}
-            </Button>
-          </div>
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4"
+      >
+        <div className="container mx-auto max-w-lg">
+          {ratedCount < 20 ? (
+            <div>
+              <Button
+                size="lg"
+                className="w-full gap-2 opacity-50 cursor-not-allowed"
+                disabled={true}
+              >
+                <Sparkles className="w-5 h-5" />
+                {20 - ratedCount}개만 더 평가하면 결과를 볼 수 있어요!
+              </Button>
+              <p className="text-xs text-center text-gray-500 mt-2">
+                최소 20개 이상 평가가 필요합니다
+              </p>
+            </div>
+          ) : (
+            <div>
+              <Button
+                size="lg"
+                className="w-full gap-2"
+                onClick={handleAnalyze}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loading size="sm" />
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    분석 결과 보기 ({ratedCount}개 평가 완료)
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-green-600 mt-2">
+                더 평가하면 더 정확한 결과를 볼 수 있어요!
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Loading Overlay */}
       {isLoading && (
