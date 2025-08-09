@@ -9,7 +9,7 @@ interface GoogleAuthButtonProps {
   text?: string
   className?: string
   variant?: "default" | "outline" | "ghost"
-  size?: "sm" | "default" | "lg"
+  size?: "sm" | "md" | "lg" | "xl" | "icon"
   redirectTo?: string
 }
 
@@ -17,7 +17,7 @@ export function GoogleAuthButton({
   text = "Google로 계속하기",
   className = "",
   variant = "default",
-  size = "default",
+  size = "md",
   redirectTo = "/evaluate"
 }: GoogleAuthButtonProps) {
   const [isLoading, setIsLoading] = useState(false)

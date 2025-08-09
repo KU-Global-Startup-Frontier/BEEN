@@ -20,6 +20,7 @@ export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [scrollY, setScrollY] = useState(0)
   const [user, setUser] = useState<User | null>(null)
+  const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
   const viralTests = [
@@ -30,6 +31,7 @@ export default function Home() {
   ]
 
   useEffect(() => {
+    setMounted(true)
     const interval = setInterval(() => {
       setCurrentTestIndex((prev) => (prev + 1) % viralTests.length)
     }, 3000)
@@ -37,6 +39,8 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
+    if (!mounted) return
+    
     // Check for logged in user
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -52,9 +56,11 @@ export default function Home() {
     return () => {
       authListener.subscription.unsubscribe()
     }
-  }, [])
+  }, [mounted])
 
   useEffect(() => {
+    if (!mounted) return
+    
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -67,7 +73,7 @@ export default function Home() {
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [])
+  }, [mounted])
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -105,29 +111,31 @@ export default function Home() {
               </span>
             </div>
             <div className="flex items-center gap-4">
-              {user ? (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm sm:text-sm text-gray-300 truncate max-w-[150px] sm:max-w-none">{user.email}</span>
-                  <Button
+              {mounted && (
+                user ? (
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm sm:text-sm text-gray-300 truncate max-w-[150px] sm:max-w-none">{user.email}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        await supabase.auth.signOut()
+                        setUser(null)
+                      }}
+                      className="text-white hover:text-gray-300"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      로그아웃
+                    </Button>
+                  </div>
+                ) : (
+                  <GoogleAuthButton
+                    text="로그인"
                     variant="ghost"
                     size="sm"
-                    onClick={async () => {
-                      await supabase.auth.signOut()
-                      setUser(null)
-                    }}
-                    className="text-white hover:text-gray-300"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    로그아웃
-                  </Button>
-                </div>
-              ) : (
-                <GoogleAuthButton
-                  text="로그인"
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10"
-                />
+                    className="text-white hover:bg-white/10"
+                  />
+                )
               )}
             </div>
           </div>

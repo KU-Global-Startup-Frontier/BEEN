@@ -15,10 +15,12 @@ export default function EvaluatePage() {
   const router = useRouter()
   const {
     sessionId,
+    userId,
     ratings,
     activityStatuses,
     ratedCount,
     initSession,
+    setUserId,
     setRating,
     setActivityStatus,
     canAnalyze,
@@ -38,7 +40,7 @@ export default function EvaluatePage() {
     try {
       const queryParams = new URLSearchParams({
         limit: '100',
-        ...(sessionId && { sessionId }),
+        ...(userId && { userId }),
         excludeRated: excludeRated.toString()
       })
       
@@ -61,7 +63,7 @@ export default function EvaluatePage() {
     } finally {
       setIsFetchingActivities(false)
     }
-  }, [sessionId])
+  }, [userId])
 
   // Initialize session and fetch activities
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function EvaluatePage() {
       try {
         const queryParams = new URLSearchParams({
           limit: '100',
-          ...(sessionId && { sessionId }),
+          ...(userId && { userId }),
           excludeRated: 'false' // Keep showing all questions but track which are rated
         })
         
@@ -158,15 +160,34 @@ export default function EvaluatePage() {
     }
 
     init()
-  }, [sessionId, initSession, setRating])
+  }, [sessionId, userId, initSession, setRating])
 
 
-  const handleRate = useCallback((score: number) => {
+  const handleRate = useCallback(async (score: number) => {
     const activity = activities[currentIndex]
     if (!activity) return
 
-    // Update local state only
+    // Update local state
     setRating(activity.id, score)
+
+    // Save to database if userId exists
+    if (userId) {
+      try {
+        await fetch('/api/ratings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            activityId: activity.id,
+            score: score,
+            userId: userId,
+          }),
+        })
+      } catch (error) {
+        console.error('Failed to save rating:', error)
+      }
+    }
 
     // Move to next card immediately
     if (currentIndex < activities.length - 1) {
@@ -180,14 +201,34 @@ export default function EvaluatePage() {
         setHasCompletedAll(true)
       }
     }
-  }, [activities, currentIndex, setRating, ratings, activityStatuses])
+  }, [activities, currentIndex, setRating, ratings, activityStatuses, userId])
 
-  const handleStatusChange = useCallback((status: 'not_tried' | 'want_to_try' | null) => {
+  const handleStatusChange = useCallback(async (status: 'not_tried' | 'want_to_try' | null) => {
     const activity = activities[currentIndex]
     if (!activity) return
 
-    // Update local state only
+    // Update local state
     setActivityStatus(activity.id, status)
+
+    // Save to database if userId exists
+    if (userId && status) {
+      try {
+        await fetch('/api/ratings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            activityId: activity.id,
+            score: status === 'not_tried' ? 0 : -1,
+            userId: userId,
+            isInterest: status === 'want_to_try',
+          }),
+        })
+      } catch (error) {
+        console.error('Failed to save status:', error)
+      }
+    }
 
     // Move to next card immediately if status is set (not null)
     if (status) {
@@ -203,7 +244,7 @@ export default function EvaluatePage() {
         }
       }
     }
-  }, [activities, currentIndex, setActivityStatus, ratings, activityStatuses])
+  }, [activities, currentIndex, setActivityStatus, ratings, activityStatuses, userId])
 
   const handleNext = useCallback(() => {
     if (currentIndex < activities.length - 1) {
@@ -241,6 +282,7 @@ export default function EvaluatePage() {
         },
         body: JSON.stringify({
           sessionId,
+          userId,
         }),
       })
 

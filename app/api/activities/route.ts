@@ -6,36 +6,35 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
-    const sessionId = searchParams.get('sessionId')
+    const userId = searchParams.get('userId')
     const excludeRated = searchParams.get('excludeRated') === 'true'
     
     const supabase = createClient()
     
     // Debug: Check if we can connect to Supabase
-    console.log('Attempting to fetch from quetion_raw table...')
+    console.log('Attempting to fetch from qt_question table...')
     
-    // First, get all questions from quetion_raw table with random ordering
+    // First, get all questions from qt_question table
     let query = supabase
-      .from('quetion_raw')
+      .from('qt_question')
       .select('*')
     
-    // If we need to exclude already rated questions
-    if (excludeRated && sessionId) {
-      // Get already rated activity IDs for this session
-      const { data: ratings } = await supabase
-        .from('ratings')
-        .select('activity_id')
-        .eq('session_id', sessionId)
+    // If we need to exclude already rated questions and have a userId
+    if (excludeRated && userId) {
+      // Get already answered question IDs for this user
+      const { data: answers } = await supabase
+        .from('rt_user_answer')
+        .select('question_id')
+        .eq('user_id', userId)
       
-      const ratedIds = ratings?.map(r => r.activity_id) || []
+      const answeredIds = answers?.map(a => a.question_id) || []
       
-      if (ratedIds.length > 0) {
-        query = query.not('id', 'in', `(${ratedIds.join(',')})`)
+      if (answeredIds.length > 0) {
+        query = query.not('question_id', 'in', `(${answeredIds.join(',')})`)
       }
     }
     
-    // For random ordering in Supabase, we need to use a different approach
-    // First get all questions, then shuffle them
+    // Execute the query
     const { data: allActivities, error: fetchError, status, statusText } = await query
     
     // Debug: Log complete response details
@@ -48,30 +47,30 @@ export async function GET(request: Request) {
     })
     
     if (fetchError) {
-      console.error('Error fetching from quetion_raw table:', fetchError)
+      console.error('Error fetching from qt_question table:', fetchError)
       throw fetchError
     }
     
     // Log the fetched data for debugging
-    console.log('Fetched from quetion_raw:', allActivities?.length || 0, 'items')
+    console.log('Fetched from qt_question:', allActivities?.length || 0, 'items')
     
-    // If no data from quetion_raw, return empty array with message
+    // If no data from qt_question, return empty array with message
     if (!allActivities || allActivities.length === 0) {
-      console.warn('No data found in quetion_raw table')
+      console.warn('No data found in qt_question table')
       return NextResponse.json({
         activities: [],
         total: 0,
         hasMore: false,
-        message: 'No questions found in quetion_raw table'
+        message: 'No questions found in qt_question table'
       })
     }
     
-    // Map the quetion_raw data to match the expected activity structure
+    // Map the qt_question data to match the expected activity structure
     const mappedActivities = allActivities.map(item => ({
-      id: item.id?.toString() || '',
+      id: item.question_id?.toString() || '',
       name: item.question_name || '',
       category: item.minor_category || item.major_category || '',
-      description: item.description || ''
+      description: item.question_name || ''
     }))
     
     // Shuffle the activities array using Fisher-Yates algorithm

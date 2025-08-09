@@ -187,7 +187,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
             className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 sm:p-6">
-          >
             <h2 className="text-xl sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
               <Target className="w-5 h-5" />
               관심 분야 분석
@@ -213,8 +212,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.05 }}
-                  className="px-2 sm:px-3 py-1 bg-white rounded-full text-sm sm:text-sm font-medium text-gray-700 shadow-sm break-words">>
-                >
+                  className="px-2 sm:px-3 py-1 bg-white rounded-full text-sm sm:text-sm font-medium text-gray-700 shadow-sm break-words">
                   {keyword}
                 </motion.span>
               ))}
@@ -275,7 +273,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-4 sm:p-6 md:p-8 text-white">
+              className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-4 sm:p-6 md:p-8 text-white"
             >
               <div className="text-center">
                 <Lock className="w-12 h-12 mx-auto mb-4 opacity-80" />

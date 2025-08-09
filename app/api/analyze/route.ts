@@ -11,69 +11,64 @@ interface CategoryScore {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { sessionId, userId } = body
+    const { userId } = body
     
-    if (!sessionId && !userId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Either sessionId or userId is required' },
+        { error: 'User ID is required' },
         { status: 400 }
       )
     }
     
     const supabase = createClient()
     
-    // Fetch user's ratings with activity details
-    let ratingsQuery = supabase
-      .from('ratings')
+    // Fetch user's answers with question details
+    const { data: answers, error: answersError } = await supabase
+      .from('rt_user_answer')
       .select(`
         *,
-        activities (
-          name,
-          category,
-          description
+        qt_question (
+          question_id,
+          question_name,
+          major_category,
+          minor_category
         )
       `)
+      .eq('user_id', userId)
+      .not('preference', 'is', null)
     
-    if (userId) {
-      ratingsQuery = ratingsQuery.eq('user_id', userId)
-    } else {
-      ratingsQuery = ratingsQuery.eq('session_id', sessionId)
-    }
-    
-    const { data: ratings, error: ratingsError } = await ratingsQuery
-    
-    if (ratingsError) {
-      console.error('Error fetching ratings:', ratingsError)
+    if (answersError) {
+      console.error('Error fetching answers:', answersError)
       return NextResponse.json(
-        { error: 'Failed to fetch ratings' },
+        { error: 'Failed to fetch answers' },
         { status: 500 }
       )
     }
     
-    if (!ratings || ratings.length < 20) {
+    if (!answers || answers.length < 20) {
       return NextResponse.json(
         { error: 'At least 20 ratings are required for analysis' },
         { status: 400 }
       )
     }
     
-    // Analyze ratings by category
+    // Analyze answers by category
     const categoryScores: CategoryScore = {}
     const keywords = new Set<string>()
     
-    ratings.forEach((rating: any) => {
-      if (rating.score >= 0 && rating.activities) {
-        const category = rating.activities.category
+    answers.forEach((answer: any) => {
+      if (answer.preference && answer.qt_question) {
+        const category = answer.qt_question.minor_category || answer.qt_question.major_category
         
         if (!categoryScores[category]) {
           categoryScores[category] = { total: 0, count: 0 }
         }
         
-        categoryScores[category].total += rating.score
+        categoryScores[category].total += answer.preference
         categoryScores[category].count += 1
         
         // Add keywords based on high scores
-        if (rating.score >= 4) {
+        if (answer.preference >= 4) {
           addKeywordsForCategory(category, keywords)
         }
       }
@@ -99,29 +94,52 @@ export async function POST(request: Request) {
       strengths,
       recommendations,
       chartData: categories,
-      ratingCount: ratings.length,
+      ratingCount: answers.length,
       analyzedAt: new Date().toISOString()
     }
     
-    // Save analysis result to database
-    const { data: savedResult, error: saveError } = await supabase
-      .from('analysis_results')
-      .insert({
-        user_id: userId || null,
-        session_id: sessionId || null,
-        summary_json: analysisResult
-      })
-      .select()
-      .single()
+    // Find the best matching universe based on category scores
+    const { data: universes, error: universesError } = await supabase
+      .from('rt_universe')
+      .select('*')
     
-    if (saveError) {
-      console.error('Error saving analysis result:', saveError)
-      // Continue even if save fails - we can still return the result
+    let bestUniverse = null
+    if (!universesError && universes && universes.length > 0) {
+      // Simple matching: find universe with highest preference_avg
+      // In production, you'd want more sophisticated matching logic
+      bestUniverse = universes[0]
+    }
+    
+    // Save user result
+    if (bestUniverse) {
+      const { error: saveError } = await supabase
+        .from('rt_user_result')
+        .insert({
+          user_id: userId,
+          universe_id: bestUniverse.universe_id
+        })
+      
+      if (saveError) {
+        console.error('Error saving user result:', saveError)
+      }
     }
     
     return NextResponse.json({
-      id: savedResult?.id || `temp-${crypto.randomUUID()}`,
-      insights: analysisResult
+      id: userId,
+      insights: analysisResult,
+      universe: bestUniverse ? {
+        name: bestUniverse.universe_name,
+        grade: bestUniverse.universe_grade,
+        description: bestUniverse.uni_explain,
+        types: [
+          { name: 'Type 1', score: bestUniverse.type1_score, description: bestUniverse.type1_ex },
+          { name: 'Type 2', score: bestUniverse.type2_score, description: bestUniverse.type2_ex },
+          { name: 'Type 3', score: bestUniverse.type3_score, description: bestUniverse.type3_ex },
+          { name: 'Type 4', score: bestUniverse.type4_score, description: bestUniverse.type4_ex },
+          { name: 'Type 5', score: bestUniverse.type5_score, description: bestUniverse.type5_ex },
+          { name: 'Type 6', score: bestUniverse.type6_score, description: bestUniverse.type6_ex },
+        ].filter(t => t.score)
+      } : null
     })
   } catch (error) {
     console.error('API error:', error)
