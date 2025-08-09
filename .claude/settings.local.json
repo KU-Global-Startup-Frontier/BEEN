@@ -5,7 +5,9 @@
       "Bash(pnpm add:*)",
       "Bash(pnpm ls:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "WebFetch(domain:pedia.watcha.com)",
+      "WebFetch(domain:reactbits.dev)"
     ],
     "deny": []
   }
