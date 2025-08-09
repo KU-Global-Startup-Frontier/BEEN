@@ -147,7 +147,7 @@ export default function Home() {
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 10 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl border border-white/20 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-sm font-medium mb-6 sm:mb-8">
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-xl border border-white/20 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-sm font-medium mb-6 sm:mb-8"
             >
               <motion.div
                 animate={{ rotate: 360 }}
