@@ -147,18 +147,18 @@ export default function Home() {
               </motion.div>
             </h1>
 
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
               className="text-lg sm:text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed"
             >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 font-bold">100가지 활동</span>을 평가하고{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 font-bold">AI가 분석</span>한 당신의 관심 분야와 강점을{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 font-bold">1000개 이상의 활동</span>을 평가하고{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 font-bold">AI가 분석</span>한 <br /> 당신의 관심 분야와 강점을{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold">시각적으로</span> 확인하세요.
             </motion.p>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
@@ -195,7 +195,7 @@ export default function Home() {
                   </span>
                 </motion.button>
               </Link>
-              
+
               <motion.button
                 className="px-8 py-4 border-2 border-white/20 rounded-2xl font-bold text-lg backdrop-blur-xl hover:bg-white/10 transition-colors"
                 whileHover={{ scale: 1.05 }}
@@ -208,7 +208,7 @@ export default function Home() {
               </motion.button>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.5 }}
@@ -247,22 +247,19 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-20"
           >
-            <motion.h2 
+            <motion.h2
               className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6"
               whileInView={{ scale: [0.8, 1.1, 1] }}
               transition={{ duration: 0.5 }}
             >
               <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                인스타 터질
+                친구들이 부러워할
               </span>
               <br />
               <span className="text-white">
-                결과 화면
+                나만의 분석 결과
               </span>
             </motion.h2>
-            <p className="text-xl text-gray-400">
-              친구들이 부러워할 나만의 분석 결과
-            </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -322,7 +319,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: card.delay, duration: 0.6 }}
-                whileHover={{ 
+                whileHover={{
                   y: -10,
                   scale: 1.05,
                   rotateY: 5,
@@ -344,7 +341,7 @@ export default function Home() {
                     >
                       <card.icon className="w-full h-full text-white" />
                     </motion.div>
-                    
+
                     <div className="relative z-10">
                       <card.icon className="w-10 h-10 text-white mb-4" />
                       <h3 className="text-xl font-bold text-white mb-1">
@@ -353,14 +350,14 @@ export default function Home() {
                       <p className="text-sm text-gray-400 mb-4">
                         {card.subtitle}
                       </p>
-                      <motion.div 
+                      <motion.div
                         className="text-5xl font-black bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
                         whileHover={{ scale: 1.1 }}
                       >
                         {card.value}
                       </motion.div>
                     </div>
-                    
+
                     <motion.div
                       className="absolute bottom-4 right-4"
                       initial={{ opacity: 0 }}
@@ -384,7 +381,7 @@ export default function Home() {
             background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(168, 85, 247, 0.3), transparent 50%)`,
           }}
         />
-        
+
         <div className="container mx-auto px-4 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -394,7 +391,7 @@ export default function Home() {
             className="max-w-4xl mx-auto"
           >
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.05, 1],
                 rotate: [-1, 1, -1]
               }}
@@ -410,8 +407,8 @@ export default function Home() {
                 </span>
               </h2>
             </motion.div>
-            
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -419,15 +416,15 @@ export default function Home() {
               className="text-2xl text-gray-300 mb-12 font-light"
             >
               <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
-                무료
+                바로
               </span>
               로 시작하고{" "}
               <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                5분
+                1분
               </span>
               만에 완료
             </motion.p>
-            
+
             <Link href="/evaluate">
               <motion.button
                 className="relative group px-12 py-6 text-xl font-black"
@@ -461,7 +458,7 @@ export default function Home() {
                 </div>
               </motion.button>
             </Link>
-            
+
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -473,11 +470,11 @@ export default function Home() {
                 <motion.span
                   key={i}
                   className="text-3xl"
-                  animate={{ 
+                  animate={{
                     y: [0, -10, 0],
                     rotate: [-10, 10, -10]
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 2,
                     delay: i * 0.2,
                     repeat: Infinity

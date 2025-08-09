@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, use } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
@@ -62,7 +62,8 @@ const sampleResult = {
   ]
 }
 
-export default function ResultsPage({ params }: { params: { id: string } }) {
+export default function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -272,7 +273,7 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
       <ShareDialog 
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        resultId={params.id}
+        resultId={id}
       />
     </div>
   )
